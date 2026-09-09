@@ -4,6 +4,11 @@
   <meta charset="utf-8">  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">  
   <title>ENVIGUARD Control Panel</title>  
+  
+  <!-- مكتبات Firebase لقراءة البيانات والتحكم فورياً -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
   <style>  
     * {  
       box-sizing: border-box;  
@@ -153,7 +158,7 @@
     </div>  
 
     <div class="oled-screen">  
-      <div class="oled-title">💨 ACTUATORS CONTROL</div>  
+      <div class="oled-title">🌀 ACTUATORS CONTROL</div>  
       <div class="oled-row">  
         <span>FAN STATE :</span>  
         <label class="switch"> 
@@ -171,6 +176,13 @@
     let currentTemp = 25;
     let currentHum = 50;
 
+    // --- إعداد Firebase ---
+    const firebaseConfig = {
+      databaseURL: "https://envigurd-default-rtdb.firebaseio.com"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
     function toggleMode() { 
       currentMode = (currentMode === "AUTO") ? "MANUAL" : "AUTO"; 
       document.getElementById('btnMode').innerText = currentMode; 
@@ -180,14 +192,17 @@
 
       processAutomation();
 
-      fetch(`/set?mode=${currentMode}`).catch(() => {}); 
+      // إرسال الوضع إلى Firebase
+      db.ref('system').update({ mode: currentMode });
     } 
 
     function manualToggleFan(state) { 
       if (currentMode === "AUTO") return; 
 
       setFanState(state);
-      fetch(`/set?fan=${state ? "ON" : "OFF"}`).catch(() => {}); 
+      
+      // إرسال أمر المروحة إلى Firebase
+      db.ref('system').update({ fan_control: state });
     } 
 
     function updateSimValue(param, val) { 
@@ -211,7 +226,10 @@
 
       processAutomation();
 
-      fetch(`/set?${param}=${val}`).catch(() => {}); 
+      // إرسال القيم السحابية في حال التجربة
+      let updateObj = {};
+      updateObj[param] = val;
+      db.ref('system').update(updateObj);
     } 
 
     function processAutomation() {
@@ -238,18 +256,32 @@
         currentTemp = parseInt(temp);
         document.getElementById('rangeTemp').value = temp; 
         document.getElementById('lblSimTemp').innerText = temp + ' °C'; 
+        let isHigh = currentTemp > 35;
+        document.getElementById('alarmTemp').innerText = isHigh ? 'HIGH 🚨' : 'NORMAL'; 
+        document.getElementById('alarmTemp').className = 'oled-value ' + (isHigh ? 'status-off' : 'status-on');
       } 
       if(hum !== undefined) { 
         currentHum = parseInt(hum);
         document.getElementById('rangeHum').value = hum; 
         document.getElementById('lblSimHum').innerText = hum + ' %'; 
+        let isHigh = currentHum > 80;
+        document.getElementById('alarmHum').innerText = isHigh ? 'HIGH 🚨' : 'NORMAL'; 
+        document.getElementById('alarmHum').className = 'oled-value ' + (isHigh ? 'status-off' : 'status-on');
       } 
       if(fan !== undefined) { 
-        setFanState(fan.toUpperCase() === 'ON');
+        setFanState(fan.toUpperCase() === 'ON' || fan === true);
       } else {
         processAutomation();
       }
     } 
+
+    // --- الاستماع للتغيرات الحقيقية من Firebase ---
+    db.ref('system').on('value', (snapshot) => {
+      const data = snapshot.val();
+      if(data) {
+        syncState(data.mode, data.fan, data.temp, data.hum);
+      }
+    });
   </script>  
 </body>  
 </html>
