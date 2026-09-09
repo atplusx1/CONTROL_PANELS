@@ -5,126 +5,58 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">  
   <title>ENVIGUARD Control Panel</title>  
   
-  <!-- مكتبات Firebase لقراءة البيانات والتحكم فورياً -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
   <style>  
-    * {  
-      box-sizing: border-box;  
-      margin: 0;  
-      padding: 0;  
-      font-family: 'Consolas', 'Courier New', monospace;  
-    }  
-    body {  
-      background-color: #080c14;  
-      color: #ffffff;  
-      display: flex;  
-      flex-direction: column;  
-      align-items: center;  
-      justify-content: flex-start;  
-      min-height: 100vh;  
-      padding: 16px;  
-      gap: 15px;  
-    }  
-    .oled-screen {  
-      background: #000000;  
-      border: 2px solid #1f293d;  
-      border-radius: 12px;  
-      padding: 14px 20px;  
-      width: 100%;  
-      max-width: 380px;  
-      box-shadow: 0 0 15px rgba(0, 210, 211, 0.15);  
-    }  
-    .oled-title {  
-      text-align: center;  
-      font-size: 15px;  
-      font-weight: bold;  
-      color: #00d2d3;  
-      letter-spacing: 1.5px;  
-      border-bottom: 1px dashed #232f48;  
-      padding-bottom: 8px;  
-      margin-bottom: 12px;  
-    }  
-    .oled-row {  
-      display: flex;  
-      justify-content: space-between;  
-      align-items: center;  
-      font-size: 14px;  
-      margin: 10px 0;  
-      color: #00ffcc;  
-    }  
-    .oled-value {  
-      color: #ffffff;  
-      font-weight: bold;  
-    }  
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Consolas', 'Courier New', monospace; }  
+    body { background-color: #080c14; color: #ffffff; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; padding: 16px; gap: 15px; }  
+    
+    .top-bar { width: 100%; max-width: 380px; display: flex; justify-content: flex-end; }
+    .btn-lang { background: #111827; border: 1px solid #00d2d3; color: #00d2d3; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+    .btn-lang:hover { background: #00d2d3; color: #000; }
+
+    .oled-screen { background: #000000; border: 2px solid #1f293d; border-radius: 12px; padding: 14px 20px; width: 100%; max-width: 380px; box-shadow: 0 0 15px rgba(0, 210, 211, 0.15); }  
+    .oled-title { text-align: center; font-size: 15px; font-weight: bold; color: #00d2d3; letter-spacing: 1.5px; border-bottom: 1px dashed #232f48; padding-bottom: 8px; margin-bottom: 12px; }  
+    .oled-row { display: flex; justify-content: space-between; align-items: center; font-size: 14px; margin: 10px 0; color: #00ffcc; }  
+    .oled-value { color: #ffffff; font-weight: bold; }  
     .status-on { color: #2ed573 !important; }  
+    .status-warn { color: #ffa502 !important; }
     .status-off { color: #ff4757 !important; }  
 
-    .switch { 
-      position: relative; 
-      display: inline-block; 
-      width: 46px; 
-      height: 22px; 
-    } 
-    .switch input { 
-      opacity: 0; 
-      width: 0; 
-      height: 0; 
-    } 
-    .slider { 
-      position: absolute; 
-      cursor: pointer; 
-      top: 0; left: 0; right: 0; bottom: 0; 
-      background-color: #1f293d; 
-      transition: .4s; 
-      border-radius: 22px; 
-      border: 1px solid #00d2d3; 
-    } 
-    .slider:before { 
-      position: absolute; 
-      content: ""; 
-      height: 14px; 
-      width: 14px; 
-      left: 3px; 
-      bottom: 3px; 
-      background-color: #ffffff; 
-      transition: .4s; 
-      border-radius: 50%; 
-    } 
+    .plant-select { background: #0d1322; border: 1px solid #00d2d3; color: #2ed573; padding: 6px 10px; border-radius: 6px; font-weight: bold; outline: none; cursor: pointer; max-width: 180px; }
+    .plant-select option { background: #080c14; color: #ffffff; }
+
+    .switch { position: relative; display: inline-block; width: 46px; height: 22px; } 
+    .switch input { opacity: 0; width: 0; height: 0; } 
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #1f293d; transition: .4s; border-radius: 22px; border: 1px solid #00d2d3; } 
+    .slider:before { position: absolute; content: ""; height: 14px; width: 14px; left: 3px; bottom: 3px; background-color: #ffffff; transition: .4s; border-radius: 50%; } 
     input:checked + .slider { background-color: #00d2d3; } 
     input:checked + .slider:before { transform: translateX(24px); } 
     input:disabled + .slider { opacity: 0.3; cursor: not-allowed; } 
 
-    .btn-mode { 
-      background: #111827; 
-      border: 1px solid #00d2d3; 
-      color: #ff9f43; 
-      padding: 6px 16px; 
-      border-radius: 6px; 
-      font-weight: bold; 
-      cursor: pointer; 
-      font-family: inherit; 
-      transition: all 0.3s;
-    } 
-    .btn-mode:hover {
-      background: #00d2d3;
-      color: #000;
-    }
+    .btn-mode { background: #111827; border: 1px solid #00d2d3; color: #ff9f43; padding: 6px 16px; border-radius: 6px; font-weight: bold; cursor: pointer; font-family: inherit; transition: all 0.3s; } 
+    .btn-mode:hover { background: #00d2d3; color: #000; }
 
-    .range-input { 
-      width: 110px; 
-      accent-color: #00d2d3; 
-      cursor: pointer;
-    } 
+    .range-input { width: 110px; accent-color: #00d2d3; cursor: pointer; } 
   </style>  
 </head>  
 <body>  
 
+  <div class="top-bar">
+    <button class="btn-lang" onclick="toggleLanguage()" id="langBtn">English 🌐</button>
+  </div>
+
   <div class="oled-screen">  
-    <div class="oled-title">⚙️ SYSTEM MODE</div>  
+    <div class="oled-title" id="t-modeTitle">⚙️ نظام التشغيل</div>  
     <div class="oled-row">  
-      <span>MODE STATUS:</span>  
+      <span id="t-plantLabel">اختيار النبات:</span>  
+      <select id="selectPlant" class="plant-select" onchange="onPlantChange(this.value)">
+        <option value="">جاري التحميل...</option>
+      </select>
+    </div>  
+    <div class="oled-row">  
+      <span id="t-modeLabel">وضع النظام:</span>  
       <button class="btn-mode" id="btnMode" onclick="toggleMode()">AUTO</button>  
     </div>  
   </div>  
@@ -132,35 +64,39 @@
   <div style="width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 15px;"> 
 
     <div class="oled-screen">  
-      <div class="oled-title">📊 SENSORS CONTROL</div>  
+      <div class="oled-title" id="t-sensorTitle">📊 قراءات الحساسات</div>  
       <div class="oled-row">  
-        <span>TEMP :</span>  
+        <span id="t-tempLabel">الحرارة:</span>  
         <input type="range" min="0" max="50" value="25" class="range-input" id="rangeTemp" oninput="updateSimValue('temp', this.value)"> 
         <span class="oled-value" id="lblSimTemp">25 °C</span> 
       </div>  
       <div class="oled-row">  
-        <span>HUM  :</span>  
+        <span id="t-humLabel">الرطوبة:</span>  
         <input type="range" min="0" max="100" value="50" class="range-input" id="rangeHum" oninput="updateSimValue('hum', this.value)"> 
         <span class="oled-value" id="lblSimHum">50 %</span> 
       </div>  
     </div>  
 
     <div class="oled-screen">  
-      <div class="oled-title">🚨 SYSTEM ALARMS</div>  
+      <div class="oled-title" id="t-alarmTitle">🚨 تنبيهات النظام</div>  
       <div class="oled-row">  
-        <span>TEMP ALARM :</span>  
-        <span class="oled-value status-on" id="alarmTemp">NORMAL</span>  
+        <span id="t-tempAlarmLabel">تنبيه الحرارة:</span>  
+        <span class="oled-value status-on" id="alarmTemp">طبيعي</span>  
       </div>  
       <div class="oled-row">  
-        <span>HUM ALARM  :</span>  
-        <span class="oled-value status-on" id="alarmHum">NORMAL</span>  
+        <span id="t-humAlarmLabel">تنبيه الرطوبة:</span>  
+        <span class="oled-value status-on" id="alarmHum">طبيعي</span>  
+      </div>  
+      <div class="oled-row">  
+        <span id="t-sysStatusLabel">حالة النظام:</span>  
+        <span class="oled-value status-on" id="sysStatus">طبيعي</span>  
       </div>  
     </div>  
 
     <div class="oled-screen">  
-      <div class="oled-title">🌀 ACTUATORS CONTROL</div>  
+      <div class="oled-title" id="t-actuatorTitle">🌀 التحكم بالمنفذات</div>  
       <div class="oled-row">  
-        <span>FAN STATE :</span>  
+        <span id="t-fanLabel">حالة المروحة:</span>  
         <label class="switch"> 
           <input type="checkbox" id="toggleFan" onchange="manualToggleFan(this.checked)" disabled> 
           <span class="slider"></span> 
@@ -172,16 +108,95 @@
   </div> 
 
   <script>  
+    let currentLang = 'ar';
     let currentMode = "AUTO"; 
     let currentTemp = 25;
     let currentHum = 50;
 
-    // --- إعداد Firebase ---
-    const firebaseConfig = {
-      databaseURL: "https://envigurd-default-rtdb.firebaseio.com"
+    let targetMinT = 18;
+    let targetMaxT = 27;
+    let targetMinH = 60;
+    let targetMaxH = 80;
+
+    let plantsMap = {};
+
+    const dict = {
+      ar: {
+        langBtn: "English 🌐", modeTitle: "⚙️ نظام التشغيل", plantLabel: "اختيار النبات:", modeLabel: "وضع النظام:",
+        sensorTitle: "📊 قراءات الحساسات", tempLabel: "الحرارة:", humLabel: "الرطوبة:",
+        alarmTitle: "🚨 تنبيهات النظام", tempAlarmLabel: "تنبيه الحرارة:", humAlarmLabel: "تنبيه الرطوبة:", sysStatusLabel: "حالة النظام:",
+        actuatorTitle: "🌀 التحكم بالمنفذات", fanLabel: "حالة المروحة:",
+        normal: "طبيعي", high: "مرتفع 🚨", low: "منخفض ⚠️", critical: "حرج 🚨"
+      },
+      en: {
+        langBtn: "عربي 🌐", modeTitle: "⚙️ SYSTEM MODE", plantLabel: "SELECT PLANT:", modeLabel: "MODE STATUS:",
+        sensorTitle: "📊 SENSORS CONTROL", tempLabel: "TEMP:", humLabel: "HUMIDITY:",
+        alarmTitle: "🚨 SYSTEM ALARMS", tempAlarmLabel: "TEMP ALARM:", humAlarmLabel: "HUM ALARM:", sysStatusLabel: "SYS STATUS:",
+        actuatorTitle: "🌀 ACTUATORS CONTROL", fanLabel: "FAN STATE:",
+        normal: "NORMAL", high: "HIGH 🚨", low: "LOW ⚠️", critical: "CRITICAL 🚨"
+      }
     };
+
+    function toggleLanguage() {
+      currentLang = currentLang === 'ar' ? 'en' : 'ar';
+      document.dir = currentLang === 'ar' ? 'rtl' : 'ltr';
+      const t = dict[currentLang];
+
+      document.getElementById('langBtn').innerText = t.langBtn;
+      document.getElementById('t-modeTitle').innerText = t.modeTitle;
+      document.getElementById('t-plantLabel').innerText = t.plantLabel;
+      document.getElementById('t-modeLabel').innerText = t.modeLabel;
+      document.getElementById('t-sensorTitle').innerText = t.sensorTitle;
+      document.getElementById('t-tempLabel').innerText = t.tempLabel;
+      document.getElementById('t-humLabel').innerText = t.humLabel;
+      document.getElementById('t-alarmTitle').innerText = t.alarmTitle;
+      document.getElementById('t-tempAlarmLabel').innerText = t.tempAlarmLabel;
+      document.getElementById('t-humAlarmLabel').innerText = t.humAlarmLabel;
+      document.getElementById('t-sysStatusLabel').innerText = t.sysStatusLabel;
+      document.getElementById('t-actuatorTitle').innerText = t.actuatorTitle;
+      document.getElementById('t-fanLabel').innerText = t.fanLabel;
+
+      evaluateAlarms();
+    }
+
+    const firebaseConfig = { databaseURL: "https://envigurd-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
+
+    function populatePlantsDropdown(activePlantName) {
+      const select = document.getElementById('selectPlant');
+      select.innerHTML = "";
+
+      Object.keys(plantsMap).forEach(key => {
+        const plant = plantsMap[key];
+        const option = document.createElement('option');
+        option.value = key;
+        option.innerText = plant.name;
+        if (plant.name === activePlantName) {
+          option.selected = true;
+        }
+        select.appendChild(option);
+      });
+    }
+
+    function onPlantChange(key) {
+      if (!plantsMap[key]) return;
+      const p = plantsMap[key];
+      db.ref('system').update({
+        plant: p.name,
+        minT: p.minT,
+        maxT: p.maxT,
+        minH: p.minH,
+        maxH: p.maxH
+      });
+    }
+
+    db.ref('plants').on('value', (snapshot) => {
+      plantsMap = snapshot.val() || {};
+      db.ref('system/plant').once('value', (sysSnap) => {
+        populatePlantsDropdown(sysSnap.val());
+      });
+    });
 
     function toggleMode() { 
       currentMode = (currentMode === "AUTO") ? "MANUAL" : "AUTO"; 
@@ -191,50 +206,70 @@
       document.getElementById('toggleFan').disabled = !isManual; 
 
       processAutomation();
-
-      // إرسال الوضع إلى Firebase
       db.ref('system').update({ mode: currentMode });
     } 
 
     function manualToggleFan(state) { 
       if (currentMode === "AUTO") return; 
-
       setFanState(state);
-      
-      // إرسال أمر المروحة إلى Firebase
-      db.ref('system').update({ fan_control: state });
+      db.ref('system').update({ fan_control: state, fan: state });
     } 
 
     function updateSimValue(param, val) { 
-      val = parseInt(val);
+      val = parseFloat(val);
       if (param === 'temp') { 
         currentTemp = val;
         document.getElementById('lblSimTemp').innerText = val + ' °C'; 
-        
-        let isHigh = val > 35;
-        document.getElementById('alarmTemp').innerText = isHigh ? 'HIGH 🚨' : 'NORMAL'; 
-        document.getElementById('alarmTemp').className = 'oled-value ' + (isHigh ? 'status-off' : 'status-on'); 
-
       } else if (param === 'hum') { 
         currentHum = val;
         document.getElementById('lblSimHum').innerText = val + ' %'; 
-        
-        let isHigh = val > 80;
-        document.getElementById('alarmHum').innerText = isHigh ? 'HIGH 🚨' : 'NORMAL'; 
-        document.getElementById('alarmHum').className = 'oled-value ' + (isHigh ? 'status-off' : 'status-on'); 
       } 
 
+      evaluateAlarms();
       processAutomation();
 
-      // إرسال القيم السحابية في حال التجربة
       let updateObj = {};
       updateObj[param] = val;
       db.ref('system').update(updateObj);
     } 
 
+    function evaluateAlarms() {
+      const t = dict[currentLang];
+
+      let tempAlarm = t.normal;
+      let tempClass = 'status-on';
+      if (currentTemp > targetMaxT) {
+        tempAlarm = t.high; tempClass = 'status-off';
+      } else if (currentTemp < targetMinT) {
+        tempAlarm = t.low; tempClass = 'status-warn';
+      }
+      document.getElementById('alarmTemp').innerText = tempAlarm;
+      document.getElementById('alarmTemp').className = 'oled-value ' + tempClass;
+
+      let humAlarm = t.normal;
+      let humClass = 'status-on';
+      if (currentHum > targetMaxH) {
+        humAlarm = t.high; humClass = 'status-off';
+      } else if (currentHum < targetMinH) {
+        humAlarm = t.low; humClass = 'status-warn';
+      }
+      document.getElementById('alarmHum').innerText = humAlarm;
+      document.getElementById('alarmHum').className = 'oled-value ' + humClass;
+
+      let sysState = t.normal;
+      let sysClass = 'status-on';
+      if (currentTemp >= 40 || currentTemp <= 5) {
+        sysState = t.critical; sysClass = 'status-off';
+      } else if (tempAlarm !== t.normal || humAlarm !== t.normal) {
+        sysState = t.high; sysClass = 'status-warn';
+      }
+      document.getElementById('sysStatus').innerText = sysState;
+      document.getElementById('sysStatus').className = 'oled-value ' + sysClass;
+    }
+
     function processAutomation() {
       if (currentMode === "AUTO") {
-        let shouldFanBeOn = currentTemp > 35;
+        let shouldFanBeOn = currentTemp > targetMaxT;
         setFanState(shouldFanBeOn);
       }
     }
@@ -246,41 +281,46 @@
       lbl.className = 'oled-value ' + (isOn ? 'status-on' : 'status-off'); 
     }
 
-    function syncState(mode, fan, temp, hum) { 
-      if(mode !== undefined) { 
-        currentMode = mode; 
-        document.getElementById('btnMode').innerText = mode; 
-        document.getElementById('toggleFan').disabled = (mode !== "MANUAL"); 
+    function syncState(data) { 
+      if (!data) return;
+
+      if (data.plant && Object.keys(plantsMap).length > 0) {
+        populatePlantsDropdown(data.plant);
+      }
+      if (data.minT !== undefined) targetMinT = parseFloat(data.minT);
+      if (data.maxT !== undefined) targetMaxT = parseFloat(data.maxT);
+      if (data.minH !== undefined) targetMinH = parseFloat(data.minH);
+      if (data.maxH !== undefined) targetMaxH = parseFloat(data.maxH);
+
+      if (data.mode !== undefined) { 
+        currentMode = data.mode; 
+        document.getElementById('btnMode').innerText = currentMode; 
+        document.getElementById('toggleFan').disabled = (currentMode !== "MANUAL"); 
       } 
-      if(temp !== undefined) { 
-        currentTemp = parseInt(temp);
-        document.getElementById('rangeTemp').value = temp; 
-        document.getElementById('lblSimTemp').innerText = temp + ' °C'; 
-        let isHigh = currentTemp > 35;
-        document.getElementById('alarmTemp').innerText = isHigh ? 'HIGH 🚨' : 'NORMAL'; 
-        document.getElementById('alarmTemp').className = 'oled-value ' + (isHigh ? 'status-off' : 'status-on');
+
+      if (data.temp !== undefined) { 
+        currentTemp = parseFloat(data.temp);
+        document.getElementById('rangeTemp').value = currentTemp; 
+        document.getElementById('lblSimTemp').innerText = currentTemp + ' °C'; 
       } 
-      if(hum !== undefined) { 
-        currentHum = parseInt(hum);
-        document.getElementById('rangeHum').value = hum; 
-        document.getElementById('lblSimHum').innerText = hum + ' %'; 
-        let isHigh = currentHum > 80;
-        document.getElementById('alarmHum').innerText = isHigh ? 'HIGH 🚨' : 'NORMAL'; 
-        document.getElementById('alarmHum').className = 'oled-value ' + (isHigh ? 'status-off' : 'status-on');
+
+      if (data.hum !== undefined) { 
+        currentHum = parseFloat(data.hum);
+        document.getElementById('rangeHum').value = currentHum; 
+        document.getElementById('lblSimHum').innerText = currentHum + ' %'; 
       } 
-      if(fan !== undefined) { 
-        setFanState(fan.toUpperCase() === 'ON' || fan === true);
+
+      evaluateAlarms();
+
+      if (data.fan !== undefined) { 
+        setFanState(data.fan === true || data.fan === 'ON');
       } else {
         processAutomation();
       }
     } 
 
-    // --- الاستماع للتغيرات الحقيقية من Firebase ---
     db.ref('system').on('value', (snapshot) => {
-      const data = snapshot.val();
-      if(data) {
-        syncState(data.mode, data.fan, data.temp, data.hum);
-      }
+      syncState(snapshot.val());
     });
   </script>  
 </body>  
